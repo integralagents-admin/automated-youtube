@@ -1,0 +1,75 @@
+# Automated YouTube bundle configuration
+#
+# Every Drive ID, spreadsheet ID, and folder name that previously lived as a
+# hard-coded string in a skill now lives here. Skills read it via
+# scripts/load_config.py at the start of every run, so swapping an ID is a
+# one-line edit.
+#
+# Required for production:
+#   - posting_schedule.spreadsheet_id, .spreadsheet_url, .tab_name
+#   - drive.queues_root_folder_id           (where uploaded clips live)
+#   - drive.source_queue_folder_id          (the raw-video queue the processor
+#                                           polls for the next source video)
+#   - drive.thumbnails_root_folder_name
+#   - drive.shortform_root_folder_name
+#   - drive.longform_root_folder_name
+#
+# All values may be overridden per-run by setting the matching environment
+# variable (AUTOYT__<SECTION>__<KEY>). See scripts/load_config.py.
+
+posting_schedule:
+  spreadsheet_name: "Posting Schedule"
+  spreadsheet_id: "1e8gw1xg5r6i13A1Tjk0XL18LGgVoXny2iJvzMiuZjwc"
+  spreadsheet_url: "https://docs.google.com/spreadsheets/d/1e8gw1xg5r6i13A1Tjk0XL18LGgVoXny2iJvzMiuZjwc/edit?gid=0#gid=0"
+  tab_name: "Sheet1"
+  required_columns:
+    - "Title"
+    - "Video Link"
+    - "Video Type"
+    - "Thumbnail Link"
+    - "Posted"
+
+drive:
+  # Folder that contains every uploaded clip and thumbnail for the channel.
+  queues_root_folder_id: "1TK2hlzvtJ77K8MBw8q0EwYtXdc4ERBPS"
+  # Sub-folder the raw-video processor polls for the next source video.
+  source_queue_folder_id: "1S2nEUUoMR_QjGl9MV8HTTGEDWt8YbeVO"
+  # Stable parent for all longform-clips outputs. Clips are always uploaded
+  # into a per-source child folder of this ID, never directly here.
+  longform_clips_parent_folder_id: "1lfL7FlI8bM_wad_j8nXrsew7xCUo_9kl"
+  # Folder names (not IDs) — recreated if missing, then reused by name.
+  shortform_root_folder_name: "Operator Maxxing — Shortform Clips"
+  longform_root_folder_name: "Operator Maxxing - Longform Clips"
+  thumbnails_root_folder_name: "Operator Maxxing — Thumbnails"
+
+youtube:
+  default_category_id: "22"
+  default_privacy_status: "private"
+  # Cadence (minutes) used by youtube-scheduler.
+  first_clip_offset_minutes: 20
+  later_clip_spacing_minutes: 60
+  max_rows_per_run: 8
+  time_zone: "UTC"
+  # When a row has no Thumbnail Link, capture a frame this many seconds into
+  # the source video and run it through the longform-thumbnail-analysis style
+  # pipeline to produce the YouTube thumbnail.
+  thumbnail_fallback_offset_seconds: 3
+
+paths:
+  # Where the clip workflows write their intermediate work products.
+  work_root: "~/.hermes/workspaces/automated-youtube"
+  work_root_template: "{work_root}/{slug}"
+  # The local checkout that holds the video-use and yt-dlp repositories.
+  bundle_root: "~/.hermes/skills/media/automated-youtube"
+  google_api_script: "~/.hermes/skills/media/automated-youtube/google-workspace/scripts/google_api.py"
+  video_use_repo: "~/.hermes/skills/media/automated-youtube/video-use"
+  yt_dlp_repo: "~/.hermes/skills/media/automated-youtube/yt-dlp"
+
+transcription:
+  elevenlabs_env_file: "~/.hermes/skills/media/automated-youtube/video-use/.env"
+  elevenlabs_env_key: "ELEVENLABS_API_KEY"
+  # Where the thumbnail renderer looks for Google Sans Bold 700.
+  # Install path: source the .ttf from Google Workspace / Google Fonts, copy it
+  # to ~/.local/share/fonts/GoogleSans-Bold.ttf (or Google Sans Bold.ttf on
+  # macOS). The renderer falls back to ComicRelief-Bold.ttf if this is missing.
+  google_sans_font_path: "~/.local/share/fonts/GoogleSans-Bold.ttf"
