@@ -1,0 +1,33 @@
+# Local credentials and environment
+.env
+*.env
+*.pem
+*token*.json
+credentials*.json
+
+# Python and local tooling
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Nested development checkouts and generated work
+video-use/
+yt-dlp/
+workspaces/
+source-rotation.json
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.png
+*.jpg
+*.jpeg
+*.jsonl
+
+# Local editor and OS files
+.DS_Store
+.vscode/
+.idea/

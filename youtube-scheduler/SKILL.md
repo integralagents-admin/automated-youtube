@@ -23,7 +23,7 @@ Read the Operator Maxxing Posting Schedule sheet, select the first eight rows wh
 
 ## Prerequisites
 
-- Google OAuth token at `$HERMES_HOME/google_token.json` with Drive, Sheets, and YouTube upload scopes.
+- Google OAuth credentials with Drive, Sheets, and YouTube upload scopes through the configured Hermes credential provider.
 - YouTube Data API v3 enabled for the active Google Cloud project.
 - All Drive IDs, spreadsheet IDs, and folder names live in `~/.hermes/skills/media/automated-youtube/config.yaml`. Resolve them with `scripts/load_config.py`. Override any value per-run by setting `AUTOYT__<SECTION>__<KEY>` (see `scripts/README.md`). Never hard-code IDs from a previous run.
 - Required config keys before starting:

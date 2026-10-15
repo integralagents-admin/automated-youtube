@@ -27,7 +27,7 @@ Select strong thumbnail frames from longform clips, then create concise transcri
 - A playable longform MP4 and its transcript with word or phrase timestamps.
 - `ffmpeg` and `ffprobe` available through `terminal`.
 - `vision_analyze` available for frame and reference-image review.
-- Google OAuth credentials with Drive write access at `$HERMES_HOME/google_token.json`.
+- Google OAuth credentials with Drive write access through the configured Hermes credential provider.
 - A stable source title, source ID, clip number, and YouTube title.
 - The thumbnail font is **Google Sans Bold 700** (`GoogleSans-Bold.ttf`). Install it at the path returned by `transcription.google_sans_font_path` in `config.yaml` (default `~/.local/share/fonts/GoogleSans-Bold.ttf`); the shared renderer falls back to `ComicRelief-Bold.ttf` if Google Sans is missing. Source the file manually from a licensed copy of the Google Sans family — it is not on public CDNs.
 - A thumbnail renderer. **Use `../scripts/render_thumbnail.py`** at the bundle root for the standard pipeline: it applies a subtle dark bottom gradient, a soft drop shadow on the caption, the Google Sans Bold 700 + emphasis-word treatment in one call, and matches the design rules below. Do not reinvent the styling in each skill — that drift is what produced mismatched thumbnails across the pipeline before.

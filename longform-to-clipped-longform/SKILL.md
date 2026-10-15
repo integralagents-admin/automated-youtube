@@ -26,7 +26,7 @@ Turn a user-supplied video link into useful 2–15 minute clips for Operator Max
 - `yt-dlp`, `ffmpeg`, and `ffprobe` available through `terminal`. Resolve `yt-dlp`'s absolute path from `paths.yt_dlp_repo` (or `which yt-dlp`).
 - The installed `video-use` repository and its Python environment. Resolve its absolute path from `paths.video_use_repo`.
 - `ELEVENLABS_API_KEY` in the `video-use` `.env` or environment; resolve the path from `transcription.elevenlabs_env_file` and the key name from `transcription.elevenlabs_env_key`. Never print the key.
-- Google OAuth token at `$HERMES_HOME/google_token.json` with Drive access.
+- Google OAuth credentials with Drive access through the configured Hermes credential provider.
 - All Drive IDs, spreadsheet IDs, and folder names live in `~/.hermes/skills/media/automated-youtube/config.yaml`. Resolve them with `scripts/load_config.py`. Override any value per-run by setting `AUTOYT__<SECTION>__<KEY>` (see `scripts/README.md`).
 - Required config keys before starting:
   - `drive.longform_clips_parent_folder_id` (the stable parent for all uploads)

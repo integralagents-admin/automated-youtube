@@ -27,7 +27,7 @@ Turn user-supplied video links into finished vertical clips for Operator Maxxing
 - The `video-use` repository installed and its `.venv` available. Resolve its absolute path from `paths.video_use_repo`; never hard-code a machine path.
 - `ELEVENLABS_API_KEY` in the `video-use` `.env` or in the environment. Resolve the `.env` location from `transcription.elevenlabs_env_file` and the key name from `transcription.elevenlabs_env_key`. Never print the key.
 - Optional owner-only Netscape cookies at a user-supplied path when YouTube requires authentication. Treat cookies as secrets; never commit, upload, or print them.
-- Google OAuth token at `$HERMES_HOME/google_token.json` with Drive access. Check with the Google Workspace setup utility before the first Drive operation.
+- Google OAuth credentials with Drive access through the configured Hermes credential provider. Check with the Google Workspace setup utility before the first Drive operation.
 - A writable working directory supplied by the user or created from `paths.work_root_template` (default `operator-maxxing/{slug}`); never write outputs into the `video-use` source checkout.
 - All Drive IDs, spreadsheet IDs, and folder names live in `~/.hermes/skills/media/automated-youtube/config.yaml`. Resolve them with `scripts/load_config.py`. Override any value per-run by setting `AUTOYT__<SECTION>__<KEY>` (see `scripts/README.md`).
 - Required config keys before starting:

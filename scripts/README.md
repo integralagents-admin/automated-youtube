@@ -43,6 +43,7 @@ When you want the new IDs to persist across all future runs. Edit
 | Key | Used by |
 |---|---|
 | `posting_schedule.spreadsheet_id` / `.spreadsheet_url` / `.tab_name` | `youtube-pipeline`, `youtube-scheduler`, `drive-cleanup` |
+| `source_tracking.*` | `youtube-source-downloader` |
 | `drive.queues_root_folder_id` | upload parents in every Drive write |
 | `drive.source_queue_folder_id` | `raw-video-processesor` queue poll |
 | `drive.shortform_root_folder_name` | `longform-to-shortfrom` |

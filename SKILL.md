@@ -28,9 +28,12 @@ This umbrella does not replace verification. Every rendered clip, Drive upload, 
 
 The component directories are under this skill directory:
 
+- `setup` — install and verify system tools, Python packages, video-use, Google OAuth, and ElevenLabs prerequisites.
 - `longform-to-shortfrom` — standalone Short extraction and rendering.
 - `longform-to-clipped-longform` — transcript-backed 2–15 minute topic clips.
-- `raw-video-processesor` — oldest-queue processor that invokes both clip workflows.
+- `youtube-source-downloader` — rotate configured YouTube channels, deduplicate against the source-tracking sheet, download with yt-dlp, and record source metadata.
+- `raw-video-processesor` — process the verified local source through both clip workflows, then delete it only after the full success gate.
+- `youtube-pipeline` — run source intake, process clips, verify Drive outputs, and append Posting Schedule rows.
 - `video-use` — conversation-driven editing helpers and rendering environment.
 - `yt-dlp` — source retrieval checkout used by the video workflows.
 - `longform-thumbnail-analysis` — transcript-backed thumbnail moment and caption selection.
@@ -79,8 +82,9 @@ Values in `config.yaml` are returned with `os.path.expanduser` applied, so a key
 
 ### What lives in `config.yaml` today
 
-- `posting_schedule`: spreadsheet name/ID/URL, tab name, required columns.
-- `drive`: three parent folder IDs (`queues_root_folder_id`, `source_queue_folder_id`, `longform_clips_parent_folder_id`) and three global folder names (`shortform_root_folder_name`, `longform_root_folder_name`, `thumbnails_root_folder_name`).
+- `posting_schedule`: clip Posting Schedule spreadsheet name/ID/URL, tab name, required columns.
+- `source_tracking`: source-ledger spreadsheet name/ID/URL, tab name, required columns, rotating channel URLs, candidate limit, and rotation state file.
+- `drive`: parent folder IDs (`queues_root_folder_id`, `source_queue_folder_id`, `longform_clips_parent_folder_id`) and global folder names (`shortform_root_folder_name`, `longform_root_folder_name`, `thumbnails_root_folder_name`).
 - `youtube`: cadence knobs (max rows per run, first/later clip spacing, default privacy, category ID, time zone).
 - `paths`: `google_api_script`, `video_use_repo`, `yt_dlp_repo`, `work_root_template`, `bundle_root`.
 - `transcription`: ElevenLabs `.env` path and key name.
@@ -89,25 +93,24 @@ When you add a new Drive ID or folder name to a component, add it to `config.yam
 
 ## Canonical Flow
 
-1. **Intake:** identify the oldest eligible source. The selection key is **`modifiedTime`**, not `createdTime` — the standard `drive search` listing returned by `google_api.py` exposes `modifiedTime` only; `createdTime` filtering requires an extra `files.get` per row and is not worth the cost. Always record both timestamps in the queue manifest when available, and document the fallback in the run report. Preserve the source URL/file ID and full metadata.
-2. **Retrieve:** use authenticated Drive download for Drive sources and the bundled `yt-dlp` checkout for supported public URLs. Never access browser cookies silently.
-3. **Transcribe:** use cached, word-level, verbatim transcripts from `video-use`; do not normalize fillers or retranscribe unchanged sources.
-4. **Select and render:** choose transcript-backed standalone or topic-focused clips, snap cuts to word boundaries, pad edges, apply required audio fades, and keep subtitles last in the filter chain.
-5. **Verify local output:** use `ffprobe` plus rendered-output visual/timeline checks before upload.
-6. **Upload to Drive:** upload each verified clip and thumbnail, retain returned IDs/links, and read metadata back.
-7. **Record the sheet:** append only verified rows to `Posting Schedule`, deduplicated by `(Title, Video Link)`, then read back exact written cells.
-8. **Publish only when requested:** the pipeline stage records Drive links; the scheduler/publishing stage is separate and must verify each external resource before marking the sheet.
-9. **Clean up:** invoke `drive-cleanup` only for explicitly authorized cleanup; trash is reversible and permanent deletion is prohibited by default.
+1. **Intake:** invoke `youtube-source-downloader`, rotate the configured channel array, and select the newest video whose exact ID is absent from `source_tracking.spreadsheet_id`. Download it with `yt-dlp`, verify it locally with `ffprobe`, append the source metadata row, and retain a source manifest.
+2. **Transcribe:** use cached, word-level, verbatim transcripts from `video-use`; do not normalize fillers or retranscribe unchanged sources.
+3. **Select and render:** choose transcript-backed standalone or topic-focused clips, snap cuts to word boundaries, pad edges, apply required audio fades, and keep subtitles last in the filter chain.
+4. **Verify local output:** use `ffprobe` plus rendered-output visual/timeline checks before upload.
+5. **Upload to Drive:** upload each verified clip and thumbnail, retain returned IDs/links, and read metadata back.
+6. **Record the sheet:** append only verified clip rows to the configured Posting Schedule, deduplicated by `(Title, Video Link)`, then read back exact written cells.
+7. **Publish only when requested:** the pipeline stage records Drive links; the scheduler/publishing stage is separate and must verify each external resource before marking the sheet.
+8. **Clean up:** after all clip and Sheet verification passes, delete the exact local source file. Drive cleanup remains a separate explicitly authorized operation using reversible Trash only.
 
 ### Safe interactive stopping points
 
-When the user runs "the pipeline" interactively (vs. a scheduled cron tick), `raw-video-processesor` does not finish in one turn. Three well-defined breakpoints leave the bundle in a fully verified, restorable state:
+When the user runs the pipeline interactively, preserve three safe breakpoints:
 
-1. **After intake + retrieval:** source downloaded, `ffprobe` passes, `queue_manifest.json` written. No Drive writes, no transcription cost. Source is still in the queue.
-2. **After transcription:** `edit/takes_packed.md` cached locally, no Drive writes beyond folder bootstrap. The source is still in the queue.
-3. **After folder bootstrap:** the three per-source folders (Shorts, Longform, Thumbnails) exist on Drive and have been read back. The source is still in the queue.
+1. **After source intake:** channel candidate selected, local download and `ffprobe` pass, source metadata row is read back, and `source_manifest.json` exists.
+2. **After transcription:** `edit/takes_packed.md` is cached locally and no clip uploads have begun.
+3. **After folder bootstrap:** the per-source Shorts, Longform, and Thumbnails folders exist on Drive and have been read back.
 
-The natural stop after each breakpoint is **"stop here and report, the source is still in the queue"**. After step 3, pause before editorial selection — it consumes the running model's time, picks clips the user may want to override, and uploads to Drive are non-reversible (only the source trash is reversible). For interactive runs, ask before proceeding past the folder-bootstrap gate.
+At each breakpoint the local source remains available. Before editorial selection and Drive uploads, pause if the user wants to review the selected source. The final local-source deletion gate still requires both clip workflows and the Posting Schedule read-back to pass.
 
 ## Cross-Component Invariants
 

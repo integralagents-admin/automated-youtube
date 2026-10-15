@@ -19,6 +19,7 @@ automated-youtube/
 ├── longform-thumbnail-analysis/
 ├── longform-to-clipped-longform/
 ├── longform-to-shortfrom/
+├── youtube-source-downloader/
 ├── raw-video-processesor/
 ├── video-content-repurposing/
 ├── video-use/
